@@ -1,0 +1,93 @@
+import streamlit as st
+from utils import load_config
+
+config = load_config()
+
+def resolution_form(max_chars:int, disabled: bool = False):
+    st.subheader("✨ Your New Year’s Resolution")
+
+    message = st.text_area(
+        "What is your New Year’s resolution?",
+        max_chars=max_chars,
+        disabled=disabled,
+        placeholder="e.g. Exercise consistently, learn a new skill..."
+    )
+
+    # Fo
+    with st.form("resolution_form"):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            age = st.number_input(
+                "Age (optional)",
+                min_value=13,
+                max_value=100,
+                disabled=disabled
+            )
+
+            country = st.selectbox(
+                "Country (optional)",
+                options=config.get('countries', []),
+                disabled=disabled
+            )
+
+        with col2:
+            resolution_category = st.selectbox(
+                "Resolution category",
+                options=config.get('resolution_categories', []),
+                disabled=disabled
+            )
+
+            motivation = st.selectbox(
+                "Main motivation",
+                options=config.get('motivations', []),
+                disabled=disabled
+            )
+
+        st.markdown("### 📊 How do you feel?")
+        col3, col4 = st.columns(2)
+        with col3:
+            old_year_flag = st.slider(
+                "How was your past year?",
+                0, 5, 3,
+                disabled=disabled
+            )
+
+        with col4:
+            new_year_flag = st.slider(
+                "How do you expect the new year to be?",
+                0, 5, 4,
+                disabled=disabled
+            )
+
+        completion_confidence = st.slider(
+            "How confident are you that you’ll complete this resolution?",
+            0, 5, 3,
+            disabled=disabled
+        )
+
+        submitted = st.form_submit_button(
+            "🚀 Submit resolution",
+            disabled=disabled
+        )
+
+    if disabled:
+        return None
+
+    if not submitted:
+        return None
+
+    if not message.strip():
+        st.error("Please write your resolution.")
+        return None
+
+    return {
+        "message": message.strip(),
+        "age": age if age > 0 else None,
+        "country": country or None,
+        "resolution_category": resolution_category,
+        "motivation": motivation,
+        "old_year_flag": old_year_flag,
+        "new_year_flag": new_year_flag,
+        "completion_confidence": completion_confidence,
+    }

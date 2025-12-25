@@ -1,0 +1,60 @@
+#####
+## RESOLUTION FORM 
+#####
+
+max_len: 400
+element_per_paginator_page: 5
+
+countries:
+  - IT
+  - DE
+  - FR
+  - ES
+  - UK
+  - US
+  - NL
+  - BE
+  - SE
+  - NO
+  - DK
+  - FI
+  - CH
+  - AT
+  - PL
+  - IE
+  - PT
+  - RU
+  - CN
+  - IN
+  - JP
+  - KR
+  - BR
+  - MX
+  - AU
+  - NZ
+  - Other
+
+resolution_categories:
+  - Health & Fitness
+  - Career & Money
+  - Learning & Skills
+  - Mental Health
+  - Relationships
+  - Travel & Experiences
+  - Hobbies & Creativity
+  - Environmental & Sustainability
+  - Spirituality & Mindfulness
+  - Other
+
+motivations:
+  - Personal Growth
+  - Health
+  - Financial Stability
+  - Relationships
+  - Curiosity / Fun
+  - External Pressure
+  - Stress Reduction
+  - Life Balance
+  - Adventure & Exploration
+  - Creativity
+  - Community & Social Impact
