@@ -32,13 +32,13 @@ def resolution_form(max_chars:int, disabled: bool = False):
             )
 
         with col2:
-            resolution_category = st.selectbox(
+            resolution_category = st.multiselect(
                 "Resolution category",
                 options=config.get('resolution_categories', []),
                 disabled=disabled
             )
 
-            motivation = st.selectbox(
+            motivation = st.multiselect(
                 "Main motivation",
                 options=config.get('motivations', []),
                 disabled=disabled
@@ -47,14 +47,14 @@ def resolution_form(max_chars:int, disabled: bool = False):
         st.markdown("### 📊 How do you feel?")
         col3, col4 = st.columns(2)
         with col3:
-            old_year_flag = st.slider(
+            past_year_score = st.slider(
                 "How was your past year?",
                 0, 5, 3,
                 disabled=disabled
             )
 
         with col4:
-            new_year_flag = st.slider(
+            new_year_score = st.slider(
                 "How do you expect the new year to be?",
                 0, 5, 4,
                 disabled=disabled
@@ -70,11 +70,23 @@ def resolution_form(max_chars:int, disabled: bool = False):
             "🚀 Submit resolution",
             disabled=disabled
         )
-
     if disabled:
         return None
+    
+    if submitted: 
+        st.session_state.has_submitted = True
+        st.success("Thanks for your submission!")
+
 
     if not submitted:
+        return None
+    
+    if not resolution_category:
+        st.error("Please select at least one resolution category.")
+        return None
+    
+    if not motivation:
+        st.error("Please select at least one motivation.")
         return None
 
     if not message.strip():
@@ -87,7 +99,7 @@ def resolution_form(max_chars:int, disabled: bool = False):
         "country": country or None,
         "resolution_category": resolution_category,
         "motivation": motivation,
-        "old_year_flag": old_year_flag,
-        "new_year_flag": new_year_flag,
+        "past_year_score": past_year_score,
+        "new_year_score": new_year_score,
         "completion_confidence": completion_confidence,
     }

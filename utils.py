@@ -5,6 +5,8 @@ from st_supabase_connection import SupabaseConnection
 import math 
 import yaml
 import streamlit as st
+from datetime import datetime
+import json 
 
 def load_config(path="config.yaml"):
     with open(path, "r", encoding="utf-8") as f:
@@ -65,7 +67,6 @@ def paginated_fetch(
         limit=page_size,
         offset=offset,
     )
-
     # Render data
     for item in data:
         yield item
@@ -117,12 +118,55 @@ def get_or_create_anon_id():
 
     return anon_id, new_user
 
-def user_has_message(_conn:SupabaseConnection, anon_id: str) -> bool:
-    res = (
-        _conn.table("messages")
-        .select("anon_id")
-        .eq("anon_id", anon_id)
-        .limit(1)
-        .execute()
-    )
-    return len(res.data) > 0
+
+def render_resolution_card(resolution):
+    """
+    Render a New Year resolution with all related info in a clean, readable format.
+    """
+    created_at = resolution.get("created_at", "")
+    if isinstance(created_at, str):
+        try:
+            created_at = datetime.fromisoformat(created_at)
+        except Exception:
+            created_at = None
+
+    date_str = created_at.strftime("%b %d, %Y") if created_at else "Unknown date"
+    resolution_no = resolution.get("resolution_no", "x")
+    with st.container():
+        st.markdown(f"### 📝 Resolution {resolution_no}")
+        st.write(resolution.get("message", "No message provided"))
+
+        # Metadata row 1: Date, Age, Country
+        cols1 = st.columns([1, 1, 1])
+        with cols1[0]:
+            st.caption(f"📅 Date: {date_str}")
+        with cols1[1]:
+            age = resolution.get("age", "Not disclosed")
+            st.caption(f"🎂 Age: {age if age is not None else 'N/A'}")
+        with cols1[2]:
+            country = resolution.get("country", "Not disclosed")
+            st.caption(f"🌍 Country: {country if country else 'N/A'}")
+
+        # Metadata row 2: Category, Motivation
+        resolution_categories = resolution.get("resolution_category", [])
+        motivations = resolution.get("motivation", [])
+        cols2 = st.columns([1, 1])
+        with cols2[0]:
+            st.caption(f"🏷️ Categories: {', '.join(resolution_categories) if resolution_categories else 'N/A'}")
+        with cols2[1]:
+            st.caption(f"🎯 Motivations: {', '.join(motivations) if motivations else 'N/A'}")
+
+
+        # Metadata row 3: Old Year Flag, New Year Flag, Completion Confidence
+        cols3 = st.columns([1, 1, 1])
+        with cols3[0]:
+            old_flag = resolution.get("past_year_score", "Not disclosed")
+            st.caption(f"⬅️ Past Year: {old_flag if old_flag is not None else 'N/A'} / 5")
+        with cols3[1]:
+            new_flag = resolution.get("new_year_score", "Not disclosed")
+            st.caption(f"➡️ New Year: {new_flag if new_flag is not None else 'N/A'} / 5")
+        with cols3[2]:
+            confidence = resolution.get("completion_confidence", "Not disclosed")
+            st.caption(f"✅ Confidence: {confidence if confidence is not None else 'N/A'} / 5")
+
+        st.divider()

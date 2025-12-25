@@ -3,7 +3,7 @@
 #####
 
 max_len: 400
-element_per_paginator_page: 5
+element_per_paginator_page: 4
 
 countries:
   - IT

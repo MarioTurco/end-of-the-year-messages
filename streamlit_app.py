@@ -1,9 +1,9 @@
 import streamlit as st
 from st_supabase_connection import SupabaseConnection
-from db.queries import get_resolutions, get_total_count
-from utils import get_or_create_anon_id, user_has_message, paginated_fetch
+from db.queries import get_resolutions, get_total_count, user_has_message, insert_resolution
+from utils import get_or_create_anon_id, paginated_fetch, load_config, render_resolution_card
 from form import resolution_form
-from utils import load_config
+
 
 config = load_config()
 
@@ -32,27 +32,23 @@ if "has_submitted" not in st.session_state:
 
 if st.session_state.has_submitted:
     st.success("🎉 You’ve already submitted your New Year’s resolution!")
-    resolution_form(disabled=True)
+    # resolution_form(max_chars=MAX_CHARACTERS, disabled=True)
+    
 else:
     data = resolution_form(max_chars=MAX_CHARACTERS)
-    st.write(data)
-    # TODO
-    # if data:
-    #     insert_resolution(
-    #         conn=st.session_state.sb_conn,
-    #         anon_id=anon_id,
-    #         **data
-    #     )
-    #     st.session_state.has_submitted = True
-    #     st.rerun()
+    if data:
+        insert_resolution(conn=st.session_state.sb_conn, anon_id=st.session_state.anon_id, **data)
+        st.session_state.has_submitted = True
+    # st.rerun()
+    
 
 
 st.subheader("Community resolutions 🎯")
-for r in paginated_fetch(
+for resolution in paginated_fetch(
     fetch_fn=get_resolutions,
     count_fn=get_total_count,
     _conn=st.session_state.sb_conn,
     page_size=PAGE_SIZE,
     page_key="resolutions_page"
 ):
-    st.markdown(f"• {r['message']}")
+    render_resolution_card(resolution)
