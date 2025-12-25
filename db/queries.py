@@ -3,8 +3,7 @@ from st_supabase_connection import SupabaseConnection
 import streamlit as st 
 from datetime import datetime 
 
-CACHE_MINUTES=1
-
+CACHE_MINUTES = 60*1
 
 def get_resolutions(_conn:SupabaseConnection, limit=50, offset=0):
     res = (
@@ -16,7 +15,6 @@ def get_resolutions(_conn:SupabaseConnection, limit=50, offset=0):
     )
     return res.data
 
-@st.cache_data(ttl=60*CACHE_MINUTES)
 def get_total_count(_conn):
     res = _conn.table("messages").select("anon_id", count="exact").execute()
     return res.count
@@ -79,6 +77,15 @@ def insert_resolution(conn, anon_id, message, age=None, country=None,
 
         # Ora puoi accedere a result.data tranquillamente
         return result.data
+    except Exception as ex:
+        print(f"Exception: {ex}")
+        return None
+    
+def get_community_stats(_conn):
+    try:
+        result = _conn.table("community_stats").select("*").execute()
+        stats = result.data[0]
+        return result.data[0]
     except Exception as ex:
         print(f"Exception: {ex}")
         return None

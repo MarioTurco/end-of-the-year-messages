@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_js_eval import streamlit_js_eval
 import uuid
 from st_supabase_connection import SupabaseConnection
 import math 
@@ -7,6 +6,12 @@ import yaml
 import streamlit as st
 from datetime import datetime
 from streamlit_cookies_manager import EncryptedCookieManager
+from db.queries import get_resolutions, get_total_count, get_community_stats
+import pandas as pd
+import plotly.express as px
+
+
+CACHE_MINUTES = 60*1
 
 def load_config(path="config.yaml"):
     with open(path, "r", encoding="utf-8") as f:
@@ -79,7 +84,7 @@ def paginated_fetch(
     # Page indicator
     st.caption(f"Page {page + 1} of {total_pages}")
 
-    col1, col2 = st.columns(2)
+    col1, _, col2 = st.columns([1,2,1])
 
     with col1:
         prev_disabled = page == 0
@@ -94,6 +99,7 @@ def paginated_fetch(
             if not next_disabled:
                 st.session_state[page_key] = page + 1
                 st.rerun()
+
 
 def get_or_create_anon_id(cookie_password):
     """
@@ -173,3 +179,86 @@ def render_resolution_card(resolution):
             st.caption(f"✅ Confidence: {confidence if confidence is not None else 'N/A'} / 5")
 
         st.divider()
+
+
+
+
+def show_community_resolutions(PAGE_SIZE):
+    with st.spinner('Loading community resolutions'):
+        st.subheader("Community resolutions 🎯")
+        for resolution in paginated_fetch(
+            fetch_fn=get_resolutions,
+            count_fn=get_total_count,
+            _conn=st.session_state.sb_conn,
+            page_size=PAGE_SIZE,
+            page_key="resolutions_page"
+        ):
+            render_resolution_card(resolution)
+
+
+def show_community_stats(_conn):
+    
+    with st.spinner('Loading community resolutions'):
+        st.header("Community stats 🎯")
+        cat_distr = get_community_stats(_conn)
+        if cat_distr:
+            
+            st.write("Total written resolutions:", cat_distr["total_resolutions"])
+            st.write("Avg past year score:", cat_distr["avg_past_year_score"])
+            st.write("Avg new year score:", cat_distr["avg_new_year_score"])
+            df_categories = pd.DataFrame(cat_distr["category_counts"])
+            df_motivations = pd.DataFrame(cat_distr["motivation_counts"])
+            st.plotly_chart(plot_category_counts(df_categories), use_container_width=True)
+            st.plotly_chart(plot_motivation_counts(df_motivations), use_container_width=True)
+
+def plot_category_counts(df):
+    max_count = df["count"].max()
+    y_axis_max = max_count * 1.2  
+
+    fig = px.bar(
+        df,
+        x="category",
+        y="count",
+        title="Resolutions by Category",
+        text="count",
+        color="category",
+        color_discrete_sequence=px.colors.qualitative.Pastel,
+    )
+    fig.update_traces(textposition='outside', textfont=dict(size=12)) 
+    fig.update_layout(
+        yaxis=dict(range=[0, y_axis_max]),  
+        xaxis_title="Category",
+        yaxis_title="Number of Resolutions",
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(size=14),
+        margin=dict(t=50, b=50, l=40, r=40)
+    )
+    fig.update_xaxes(tickangle=45)
+    return fig
+
+def plot_motivation_counts(df):
+    max_count = df["count"].max()
+    y_axis_max = max_count * 1.2
+
+    fig = px.bar(
+        df,
+        x="motivation",
+        y="count",
+        title="Resolutions by Motivation",
+        text="count",
+        color="motivation",
+        color_discrete_sequence=px.colors.qualitative.Set2,
+    )
+    fig.update_traces(textposition='outside', textfont=dict(size=12))
+    fig.update_layout(
+        yaxis=dict(range=[0, y_axis_max]),
+        xaxis_title="Motivation",
+        yaxis_title="Number of Resolutions",
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(size=14),
+        margin=dict(t=50, b=50, l=40, r=40)
+    )
+    fig.update_xaxes(tickangle=45)
+    return fig

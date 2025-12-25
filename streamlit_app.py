@@ -1,7 +1,7 @@
 import streamlit as st
 from st_supabase_connection import SupabaseConnection
-from db.queries import get_resolutions, get_total_count, user_has_message, insert_resolution
-from utils import get_or_create_anon_id, paginated_fetch, load_config, render_resolution_card
+from db.queries import user_has_message, insert_resolution
+from utils import get_or_create_anon_id,  load_config, show_community_resolutions, show_community_stats
 from form import resolution_form
 
 config = load_config()
@@ -42,13 +42,10 @@ else:
         insert_resolution(conn=st.session_state.sb_conn, anon_id=st.session_state.anon_id, **data)
         st.session_state.has_submitted = True
 
-with st.spinner('Loading community resolutions'):
-    st.subheader("Community resolutions 🎯")
-    for resolution in paginated_fetch(
-        fetch_fn=get_resolutions,
-        count_fn=get_total_count,
-        _conn=st.session_state.sb_conn,
-        page_size=PAGE_SIZE,
-        page_key="resolutions_page"
-    ):
-        render_resolution_card(resolution)
+
+with st.expander("Community Resolutions (Click to see)"):
+    show_community_resolutions(PAGE_SIZE)
+
+
+with st.expander("Community Stats (Click to see)"):
+    show_community_stats(_conn=st.session_state.sb_conn)
