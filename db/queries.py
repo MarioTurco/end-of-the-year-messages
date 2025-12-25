@@ -5,8 +5,8 @@ from datetime import datetime
 
 CACHE_MINUTES=1
 
-@st.cache_data(ttl=60*CACHE_MINUTES)
-def get_resolutions(_conn:SupabaseConnection, limit=10, offset=0):
+
+def get_resolutions(_conn:SupabaseConnection, limit=50, offset=0):
     res = (
         _conn.table("messages")
         .select("*")

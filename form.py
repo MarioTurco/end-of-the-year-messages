@@ -73,11 +73,7 @@ def resolution_form(max_chars:int, disabled: bool = False):
     if disabled:
         return None
     
-    if submitted: 
-        st.session_state.has_submitted = True
-        st.success("Thanks for your submission!")
-
-
+    
     if not submitted:
         return None
     
@@ -92,6 +88,10 @@ def resolution_form(max_chars:int, disabled: bool = False):
     if not message.strip():
         st.error("Please write your resolution.")
         return None
+    
+    if submitted: 
+        st.session_state.has_submitted = True
+        st.success("Thanks for your submission!")
 
     return {
         "message": message.strip(),

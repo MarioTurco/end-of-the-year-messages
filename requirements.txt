@@ -2,3 +2,4 @@ streamlit
 st-supabase-connection
 streamlit_js_eval
 pyyaml
+streamlit-cookies-manager

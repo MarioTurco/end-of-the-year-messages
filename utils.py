@@ -6,7 +6,7 @@ import math
 import yaml
 import streamlit as st
 from datetime import datetime
-import json 
+from streamlit_cookies_manager import EncryptedCookieManager
 
 def load_config(path="config.yaml"):
     with open(path, "r", encoding="utf-8") as f:
@@ -59,6 +59,11 @@ def paginated_fetch(
     total_items = count_fn(_conn)
     total_pages = max(1, math.ceil(total_items / page_size))
 
+    if st.session_state[page_key] >= total_pages:
+        st.session_state[page_key] = total_pages - 1
+    if st.session_state[page_key] < 0:
+        st.session_state[page_key] = 0
+
     page = st.session_state[page_key]
     offset = page * page_size
 
@@ -77,22 +82,20 @@ def paginated_fetch(
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(
-            "⬅ Previous",
-            disabled=page == 0,
-            key=f"{page_key}_prev"
-        ):
-            st.session_state[page_key] -= 1
+        prev_disabled = page == 0
+        if st.button("⬅ Previous", disabled=prev_disabled, key=f"{page_key}_prev"):
+            if not prev_disabled:
+                st.session_state[page_key] = page - 1
+                st.rerun()
 
     with col2:
-        if st.button(
-            "Next ➡",
-            disabled=page >= total_pages - 1,
-            key=f"{page_key}_next"
-        ):
-            st.session_state[page_key] += 1
+        next_disabled = page >= total_pages - 1
+        if st.button("Next ➡", disabled=next_disabled, key=f"{page_key}_next"):
+            if not next_disabled:
+                st.session_state[page_key] = page + 1
+                st.rerun()
 
-def get_or_create_anon_id():
+def get_or_create_anon_id(cookie_password):
     """
     Returns a persistent anonymous user ID stored in the browser.
 
@@ -100,23 +103,23 @@ def get_or_create_anon_id():
     - If not present, generates a UUID
     - Saves it back to localStorage
     """
+    cookies = EncryptedCookieManager(prefix="new-year-resolution-mt", password=cookie_password)
 
-    # Try to read anon_id from browser localStorage
-    anon_id = streamlit_js_eval(
-        js_expressions="localStorage.getItem('anon_id')"
-    )
-    new_user = False
-    if not anon_id:
-        new_user = True
-        # Generate a new anon_id
+    if not cookies.ready():
+        st.stop()
+
+    anon_id = cookies.get("anon_id")
+
+    if anon_id is None:
+        # Genera anon_id e salvalo nei cookie
         anon_id = str(uuid.uuid4())
+        cookies["anon_id"] = anon_id
+        cookies.save()
 
-        # Save it in localStorage
-        streamlit_js_eval(
-            js_expressions=f"localStorage.setItem('anon_id', '{anon_id}')"
-        )
+    st.session_state.anon_id = anon_id
+    # Try to read anon_id from browser localStorage
 
-    return anon_id, new_user
+    return anon_id
 
 
 def render_resolution_card(resolution):
