@@ -24,8 +24,6 @@ with st.spinner('Loading user data'):
     st.session_state.anon_id = get_or_create_anon_id(cookie_password=cookie_pwd)
 st.session_state.sb_conn = st.connection("supabase",type=SupabaseConnection)
 
-st.write(st.session_state.anon_id)
-
 if "has_submitted" not in st.session_state:
     st.session_state.has_submitted = user_has_message(
         anon_id=st.session_state.anon_id,
